@@ -2,10 +2,8 @@ import numpy as np
 
 
 def softmax(x):
-    x_norm = x - np.max(x, axis=1, keepdims=True)
-    exp_x = np.exp(x_norm)
-    div = np.sum(exp_x, axis=1, keepdims=True) + 1e-8
-    return exp_x / div
+    exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
 
 
 # Para paralelizarlo, todos los np.dot tenemos que cambiarlos por el producto matricial (o suma)
@@ -14,7 +12,9 @@ class Linear:
     def __init__(self, in_, out_):
         self.input = None
         self.output = None
-        self.weights = np.random.randn(in_, out_).astype(np.float32)
+
+        # kelming-he
+        self.weights = np.random.randn(in_, out_) * np.sqrt(2. / in_)
         self.bias = np.zeros((1, out_)).astype(np.float32)
 
     def forward(self, x):
@@ -24,7 +24,6 @@ class Linear:
         return self.output
 
     def backward(self, z, lr=0.001):
-
         grad_input = np.dot(z, self.weights.T)  # dL/dx = dL/dz * dz/dx = z * w
         grad_weights = np.dot(self.input.T, z)  # dL/dw = dL/dz * dz/dw = z * x
         grad_bias = np.sum(z, axis=0, keepdims=True)  # dL/db = dL/dz * dz/db = 1
@@ -60,13 +59,13 @@ class FullyConnected:
         middle = (num_capas - 2) // 2
 
         increm = in_
-        factor = lambda val, i:  val // 2 # val * 2 if middle < i else
+        factor = lambda val, i: val // 2  # val * 2 if middle < i else
 
         for i in range(num_capas - 1):
             past_increm = int(increm)
             increm = int(factor(increm, i))
 
-            #print(past_increm, increm)
+            # print(past_increm, increm)
 
             capa_i = Linear(past_increm, increm)
             relu_i = ReLU()
@@ -94,10 +93,9 @@ class FullyConnected:
 
         grad = self.capa_f.backward(z=z, lr=lr)
 
-        for i in range(self.num_capas - 2, 0, -1):
-
+        for i in range(self.num_capas - 2, -1, -1):
             relu_i = getattr(self, f"relu_{i}")
             capa_i = getattr(self, f"capa_{i}")
 
             grad = relu_i.backward(z=grad)
-            grad = capa_i.backward(z=grad, lr=0.001)
+            grad = capa_i.backward(z=grad, lr=lr)
