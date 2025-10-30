@@ -26,6 +26,7 @@ class Linear:
         grad_weights = np.dot(self.input.T, z)  # dL/dw = dL/dz * dz/dw = z * x
         grad_bias = np.sum(z, axis=0, keepdims=True)  # dL/db = dL/dz * dz/db = 1
 
+        # Usando el optimizador SGD
         self.weights -= lr * grad_weights
         self.bias -= lr * grad_bias
 
