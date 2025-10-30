@@ -2,8 +2,10 @@ import numpy as np
 
 
 def softmax(x):
-    div = np.sum(np.exp(x)) + 1e-8
-    return np.exp(x) / div
+    x_norm = x - np.max(x, axis=1, keepdims=True)
+    exp_x = np.exp(x_norm)
+    div = np.sum(exp_x, axis=1, keepdims=True) + 1e-8
+    return exp_x / div
 
 
 # Para paralelizarlo, todos los np.dot tenemos que cambiarlos por el producto matricial (o suma)
@@ -13,7 +15,7 @@ class Linear:
         self.input = None
         self.output = None
         self.weights = np.random.randn(in_, out_).astype(np.float32)
-        self.bias = np.zeros(out_).astype(np.float32)
+        self.bias = np.zeros((1, out_)).astype(np.float32)
 
     def forward(self, x):
         self.input = x
@@ -22,6 +24,7 @@ class Linear:
         return self.output
 
     def backward(self, z, lr=0.001):
+
         grad_input = np.dot(z, self.weights.T)  # dL/dx = dL/dz * dz/dx = z * w
         grad_weights = np.dot(self.input.T, z)  # dL/dw = dL/dz * dz/dw = z * x
         grad_bias = np.sum(z, axis=0, keepdims=True)  # dL/db = dL/dz * dz/db = 1
@@ -57,16 +60,20 @@ class FullyConnected:
         middle = (num_capas - 2) // 2
 
         increm = in_
-        factor = lambda val, i: val * 2 if middle < i else val // 2
+        factor = lambda val, i:  val // 2 # val * 2 if middle < i else
 
         for i in range(num_capas - 1):
             past_increm = int(increm)
             increm = int(factor(increm, i))
+
+            #print(past_increm, increm)
+
             capa_i = Linear(past_increm, increm)
+            relu_i = ReLU()
             setattr(self, f"capa_{i}", capa_i)
+            setattr(self, f"relu_{i}", relu_i)
 
         self.capa_f = Linear(increm, out_)
-        self.ReLU = ReLU()
 
     def forward(self, x):
 
@@ -75,8 +82,9 @@ class FullyConnected:
 
         for i in range(self.num_capas - 1):
             capa_i = getattr(self, f"capa_{i}")
+            relu_i = getattr(self, f"relu_{i}")
             x = capa_i.forward(x)
-            x = self.ReLU.forward(x)
+            x = relu_i.forward(x)
 
         last_capa = self.capa_f.forward(x)
 
@@ -86,7 +94,10 @@ class FullyConnected:
 
         grad = self.capa_f.backward(z=z, lr=lr)
 
-        for i in range(self.num_capas - 1, 0, -1):
+        for i in range(self.num_capas - 2, 0, -1):
+
+            relu_i = getattr(self, f"relu_{i}")
             capa_i = getattr(self, f"capa_{i}")
-            grad = self.ReLU.backward(z=grad)
+
+            grad = relu_i.backward(z=grad)
             grad = capa_i.backward(z=grad, lr=0.001)
