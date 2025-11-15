@@ -1,6 +1,22 @@
 import numpy as np
 
 
+def split_data(SamplesData, LabelsData, proportions):
+    total_proportions = np.sum(proportions)
+    if total_proportions != 1:
+        raise ValueError(f"Se esperaba que la cantidad colocada sea del 100%, se obtuvo -> {total_proportions}")
+
+    past = 0
+    total_data = len(SamplesData)
+    list_proportions = []
+
+    for i in proportions:
+        size = int(total_data * i)
+        list_proportions.append([SamplesData[past:past+size], LabelsData[past:past+size]])
+        past += size
+
+    return list_proportions
+
 def to_batch(data, label, batch_size=64, shuffle=True, rng=None):
     if not isinstance(data, np.ndarray) or not np.issubdtype(data.dtype, np.float32):
         data = np.array(data).astype(np.float32)
@@ -52,7 +68,6 @@ def accuracy(model, eval_data):
     Corrects = 0
 
     for data, label in eval_data:
-
         z = model.forward(data)
         pred = np.argmax(z, axis=1)
         Corrects += np.sum(pred == label)
@@ -62,7 +77,7 @@ def accuracy(model, eval_data):
 
 
 # Se supone que train_data ya debe estar batcherizado (xd)
-def train(model, train_data, eval_data, epochs=100, show=10, lr=0.001):
+def train(model, train_data, eval_data, epochs=100, show=3, lr=0.001):
     avg_loss = None
     factor_loss = 0.1
     for epoch in range(epochs):
@@ -78,6 +93,5 @@ def train(model, train_data, eval_data, epochs=100, show=10, lr=0.001):
                 avg_loss = factor_loss * loss + (1 - factor_loss) * avg_loss
 
         if (epoch + 1) % show == 0:
-
             acc = accuracy(model, eval_data)
-            print(f"Epoca: {epoch+1} --> avg_loss: {avg_loss:.5f}, accuracy: {acc:.5f}")
+            print(f"Epoca: {epoch + 1} --> avg_loss: {avg_loss:.5f}, accuracy: {acc:.5f}")

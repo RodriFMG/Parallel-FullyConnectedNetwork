@@ -38,4 +38,7 @@ def get_images(mnist_path):
                 test_labels = data.read()[8:]
                 y_test = np.frombuffer(test_labels, dtype=np.uint8)
 
-    return x_train, y_train, x_test, y_test
+    SampleData = np.concatenate([x_train, x_test])
+    Labels = np.concatenate([y_train, y_test])
+
+    return SampleData, Labels

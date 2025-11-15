@@ -58,21 +58,28 @@ class FullyConnected:
         self.num_capas = num_capas
         middle = (num_capas - 2) // 2
 
-        increm = in_
-        factor = lambda val, i: val // 2  # val * 2 if middle < i else
+        lg2 = np.log2(in_)
+        lower = int(2 ** np.floor(lg2))
+        upper = int(2 ** np.ceil(lg2))
 
-        for i in range(num_capas - 1):
-            past_increm = int(increm)
-            increm = int(factor(increm, i))
+        near = lower if abs(in_ - lower) < abs(in_ - upper) else upper
+        factor = lambda val, i: val * 2 if middle > i else val // 2
 
-            # print(past_increm, increm)
+        self.capa_0 = Linear(in_, near, rng)
+        self.relu_0 = ReLU()
 
-            capa_i = Linear(past_increm, increm, rng)
+        for i in range(1, num_capas - 1):
+            past_increm = int(near)
+            near = int(factor(near, i))
+
+            #print(past_increm, near)
+
+            capa_i = Linear(past_increm, near, rng)
             relu_i = ReLU()
             setattr(self, f"capa_{i}", capa_i)
             setattr(self, f"relu_{i}", relu_i)
 
-        self.capa_f = Linear(increm, out_, rng)
+        self.capa_f = Linear(near, out_, rng)
 
     def forward(self, x):
 
