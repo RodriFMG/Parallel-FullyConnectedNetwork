@@ -9,7 +9,7 @@ def list_files(mnist_path):
     return [join(mnist_path, f) for f in os.listdir(mnist_path) if isfile(join(mnist_path, f))]
 
 
-def get_images(mnist_path):
+def get_images(mnist_path, percentage=1):
     for f in list_files(mnist_path):
         if 'train-images' in f:
             with gzip.open(f, 'rb') as data:
@@ -41,4 +41,7 @@ def get_images(mnist_path):
     SampleData = np.concatenate([x_train, x_test])
     Labels = np.concatenate([y_train, y_test])
 
-    return SampleData, Labels
+    total_data = int(len(SampleData) * percentage)
+    print("Cantidad de datos a usar: ", total_data)
+
+    return SampleData[0:total_data], Labels[0:total_data]
