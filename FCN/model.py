@@ -9,12 +9,12 @@ def softmax(x):
 # Para paralelizarlo, todos los np.dot tenemos que cambiarlos por el producto matricial (o suma)
 # en su version paralela
 class Linear:
-    def __init__(self, in_, out_):
+    def __init__(self, in_, out_, rng):
         self.input = None
         self.output = None
 
         # kelming-he
-        self.weights = np.random.randn(in_, out_) * np.sqrt(2. / in_)
+        self.weights = rng.standard_normal((in_, out_)) * np.sqrt(2. / in_)
         self.bias = np.zeros((1, out_)).astype(np.float32)
 
     def forward(self, x):
@@ -53,7 +53,7 @@ class ReLU:
 
 class FullyConnected:
 
-    def __init__(self, in_, out_, num_capas=5):
+    def __init__(self, in_, out_, rng, num_capas=5):
 
         self.num_capas = num_capas
         middle = (num_capas - 2) // 2
@@ -67,12 +67,12 @@ class FullyConnected:
 
             # print(past_increm, increm)
 
-            capa_i = Linear(past_increm, increm)
+            capa_i = Linear(past_increm, increm, rng)
             relu_i = ReLU()
             setattr(self, f"capa_{i}", capa_i)
             setattr(self, f"relu_{i}", relu_i)
 
-        self.capa_f = Linear(increm, out_)
+        self.capa_f = Linear(increm, out_, rng)
 
     def forward(self, x):
 

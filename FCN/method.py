@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def to_batch(data, label, batch_size=64, shuffle=True):
+def to_batch(data, label, batch_size=64, shuffle=True, rng=None):
     if not isinstance(data, np.ndarray) or not np.issubdtype(data.dtype, np.float32):
         data = np.array(data).astype(np.float32)
     if not isinstance(label, np.ndarray) or not np.issubdtype(label.dtype, np.int64):
@@ -15,8 +15,11 @@ def to_batch(data, label, batch_size=64, shuffle=True):
     total_data = data.shape[0]
 
     if shuffle:
-        indexs = np.arange(total_data)
-        np.random.shuffle(indexs)
+
+        if rng is None:
+            raise ValueError("Si shuffle=True se debe mandar un generador independiente")
+
+        indexs = rng.permutation(total_data)
         data = data[indexs]
         label = label[indexs]
 
@@ -72,7 +75,7 @@ def train(model, train_data, eval_data, epochs=100, show=10, lr=0.001):
             if avg_loss is None:
                 avg_loss = loss
             else:
-                avg_loss = factor_loss * loss + (1- factor_loss) * avg_loss
+                avg_loss = factor_loss * loss + (1 - factor_loss) * avg_loss
 
         if (epoch + 1) % show == 0:
 
