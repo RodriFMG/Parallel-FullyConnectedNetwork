@@ -116,4 +116,4 @@ if __name__ == "__main__":
     DataPath = "./Data/"
     path_load = "./fcn_model.joblib"
 
-    test_times_np(DataPath, save=True)
+    get_best_parallel_model(DataPath, save=True)

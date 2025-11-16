@@ -93,7 +93,7 @@ class FullyConnected:
 
         for i in range(1, num_capas - 1):
             past_increm = int(near)
-            near = int(factor(near, i))
+            near = int(factor(near, i-1))
 
             #print(past_increm, near)
 
