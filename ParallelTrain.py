@@ -30,7 +30,8 @@ def parallel_train(DataPath, is_sec=False, num_iters=10, percentage=1, NumThread
 
     p = num_iters if NumThreads == -1 else NumThreads
 
-    results = Parallel(n_jobs=p)(
+    # threading <- config. memoria compartida
+    results = Parallel(n_jobs=p, backend='threading')(
         delayed(SecTrain)(seed=i, SampleData=SampleData, Labels=Labels, is_sec=is_sec,
                           BatchSize=BatchSize, Epochs=Epochs, NumLayers=NumLayers, lr=lr)
         for i in range(num_iters)

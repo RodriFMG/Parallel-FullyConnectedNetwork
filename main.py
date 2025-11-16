@@ -1,6 +1,7 @@
 from ParallelTrain import parallel_train
 import matplotlib.pyplot as plt
 
+import os
 import joblib
 from DataToArray import get_images
 from FCN.method import accuracy, to_batch, split_data
@@ -11,11 +12,11 @@ import time
 def get_best_parallel_model(DataPath="./Data/", save=False):
     # Si NumThreads == -1 <- PRAM, numero de hilos = num_iters
     NumThreads = 1
-    BatchSize = 32
+    BatchSize = 64
     Epochs = 10
-    NumLayers = 2
+    NumLayers = 5
     lr = 0.001
-    num_iters = 5
+    num_iters = 10
     percentage = 1
     is_sec = False
 
@@ -56,31 +57,45 @@ def test_load_model(DataPath="./Data/", path_load="./fcn_model.joblib"):
     print(f"Accuracy: {accuracy(model, DataBatchTest)}")
 
 
-def test_model_times(DataPath, num_hilos, num_data):
+def test_model_times(DataPath, num_hilos, num_data, save=False):
     if num_data > 70_000:
         num_data = 70_000
 
     NumThreads = num_hilos
-    BatchSize = 32
-    Epochs = 10
-    NumLayers = 2
+    BatchSize = 64
+    Epochs = 15
+    NumLayers = 5
     lr = 0.001
     percentage = num_data / 70_000
+    num_iters = 25
     is_sec = False
 
     start = time.perf_counter()
-    _, _ = parallel_train(DataPath, percentage=percentage, NumThreads=NumThreads, BatchSize=BatchSize,
-                          Epochs=Epochs, NumLayers=NumLayers, lr=lr, is_sec=is_sec)
+    model, As = parallel_train(DataPath, percentage=percentage, NumThreads=NumThreads, BatchSize=BatchSize,
+                               Epochs=Epochs, NumLayers=NumLayers, lr=lr, is_sec=is_sec, num_iters=num_iters)
     end = time.perf_counter()
+
+    if save:
+        print("/======================================/")
+        print(f"Modelo con precision: {As}")
+        print("/======================================/")
+
+        joblib.dump(model, f"./model_np/fcn_model_{num_hilos}_{num_data}.joblib")
 
     return end - start
 
 
-def test_times_np(DataPath):
+def test_times_np(DataPath, save=False):
     hilos = [1, 2, 4, 8, 16, 32]
     num_data = [5000, 10000, 20000, 40000]
 
-    times = [[test_model_times(DataPath, p, n) for n in num_data] for p in hilos]
+    if save:
+        os.makedirs("./model_np", exist_ok=True)
+
+    times = [[test_model_times(DataPath, p, n, save=save) for n in num_data] for p in hilos]
+
+    if save:
+        np.save("./model_np/times_test.npy", np.array(times, dtype=object))
 
     plt.figure(figsize=(10, 6))
 
@@ -100,3 +115,5 @@ def test_times_np(DataPath):
 if __name__ == "__main__":
     DataPath = "./Data/"
     path_load = "./fcn_model.joblib"
+
+    test_times_np(DataPath, save=True)

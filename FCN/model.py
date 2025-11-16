@@ -95,7 +95,7 @@ class FullyConnected:
             past_increm = int(near)
             near = int(factor(near, i))
 
-            # print(past_increm, near)
+            #print(past_increm, near)
 
             capa_i = Linear(past_increm, near, rng, is_sec=is_sec)
             relu_i = ReLU()
