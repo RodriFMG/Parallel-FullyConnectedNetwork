@@ -85,7 +85,9 @@ class FullyConnected:
         lower = int(2 ** np.floor(lg2))
         upper = int(2 ** np.ceil(lg2))
 
-        near = lower if abs(in_ - lower) < abs(in_ - upper) else upper
+        # crece demasiado pipi
+        #near = lower if abs(in_ - lower) < abs(in_ - upper) else upper
+        near = 256 # buena cantidad de inicio para digitos mnist.
         factor = lambda val, i: val * 2 if middle > i else val // 2
 
         self.capa_0 = Linear(in_, near, rng, is_sec=is_sec)
